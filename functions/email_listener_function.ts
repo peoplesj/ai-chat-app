@@ -94,51 +94,51 @@ export default SlackFunction(
     }
 
     // 4. Create trigger to listen for new messages on the email message thread
-    // const authResponse = await client.auth.test();
-    // const botId = authResponse.user_id;
+    const authResponse = await client.auth.test();
+    const botId = authResponse.user_id;
 
     // console.log("authresponseObj", JSON.stringify(authResponse)); // there is a bot id issueee ehreeeee!!!!
     // console.log("boooootttiddddd", botId); // there is a bot id issueee ehreeeee!!!!
 
-    // const triggerResponse = await client.workflows.triggers.create({
-    //   type: TriggerTypes.Event,
-    //   name: `Thread Listener response for ts: ${inputs.message_ts}`,
-    //   description: "Listens on the thread for the message in the name",
-    //   workflow: `#/workflows/${ThreadWorkflow.definition.callback_id}`,
-    //   event: {
-    //     event_type: TriggerEventTypes.MessagePosted,
-    //     channel_ids: [`${inputs.channel_id}`],
-    //     filter: {
-    //       version: 1,
-    //       root: {
-    //         operator: "AND",
-    //         inputs: [{
-    //           statement: `{{data.thread_ts}} == ${inputs.message_ts}`,
-    //         }, {
-    //           operator: "NOT",
-    //           inputs: [{
-    //             statement: `{{data.user_id}} == ${botId}`,
-    //           }],
-    //         }],
-    //       },
-    //     },
-    //   },
-    //   inputs: {
-    //     thread_ts: {
-    //       value: inputs.message_ts,
-    //     },
-    //     channel_id: {
-    //       value: "{{data.channel_id}}",
-    //     },
-    //     bot_id: {
-    //       value: botId,
-    //     },
-    //   },
-    // });
+    const triggerResponse = await client.workflows.triggers.create({
+      type: TriggerTypes.Event,
+      name: `Thread Listener response for ts: ${inputs.message_ts}`,
+      description: "Listens on the thread for the message in the name",
+      workflow: `#/workflows/${ThreadWorkflow.definition.callback_id}`,
+      event: {
+        event_type: TriggerEventTypes.MessagePosted,
+        channel_ids: [`${inputs.channel_id}`],
+        filter: {
+          version: 1,
+          root: {
+            operator: "AND",
+            inputs: [{
+              statement: `{{data.thread_ts}} == ${inputs.message_ts}`,
+            }, {
+              operator: "NOT",
+              inputs: [{
+                statement: `{{data.user_id}} == ${botId}`,
+              }],
+            }],
+          },
+        },
+      },
+      inputs: {
+        thread_ts: {
+          value: inputs.message_ts,
+        },
+        channel_id: {
+          value: "{{data.channel_id}}",
+        },
+        bot_id: {
+          value: botId,
+        },
+      },
+    });
 
-    // if (!triggerResponse.ok) {
-    //   console.error(triggerResponse.error);
-    // }
+    if (!triggerResponse.ok) {
+      console.error(triggerResponse.error);
+    }
 
     return {
       outputs: {},

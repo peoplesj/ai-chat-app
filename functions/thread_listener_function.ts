@@ -91,6 +91,13 @@ export default SlackFunction(
     // 3. Update "thinking" message with AI model contents
     const completionContent = chatCompletion.choices[0].message.content;
 
+    const d = new Date();
+    console.log(
+      "!=!=!!=!=!!=!=!thread listenern fucntion // client.chat.update!=!=!!=!=!!=!=!",
+      d.getMinutes(),
+      d.getSeconds(),
+    );
+
     const updateResponse = await client.chat.update({
       channel: inputs.channel_id,
       ts: thinkingResponse.ts,
