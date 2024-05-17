@@ -3,21 +3,21 @@ import OpenAI from "openai/mod.ts";
 import { TriggerEventTypes, TriggerTypes } from "deno-slack-api/mod.ts";
 import ThreadWorkflow from "../workflows/thread_workflow.ts";
 
-export const EmailListenerFunction = DefineFunction({
-  callback_id: "email_listener_function",
-  title: "Email Listener Function",
+export const OriginalMsgListenerFunction = DefineFunction({
+  callback_id: "original_msg_listener_function",
+  title: "Original msg Listener Function",
   description:
-    "A function that listens for email on a particular channel and uses AI to generate a response",
-  source_file: "functions/email_listener_function.ts",
+    "A function that listens for top level message on a particular channel and uses AI to generate a response",
+  source_file: "functions/original_msg_listener_function.ts",
   input_parameters: {
     properties: {
       message_ts: {
         type: Schema.types.string,
-        description: "The timestamp of the email message.",
+        description: "The timestamp of the original message.",
       },
       channel_id: {
         type: Schema.types.string,
-        description: "The channel that the email was posted.",
+        description: "The channel that the message was posted.",
       },
     },
     required: ["message_ts", "channel_id"],
@@ -25,16 +25,10 @@ export const EmailListenerFunction = DefineFunction({
 });
 
 export default SlackFunction(
-  EmailListenerFunction,
+  OriginalMsgListenerFunction,
   async ({ client, inputs, env }) => {
     // 1. Send a message in thread to the e-mail message,
     //    confirming that the AI model is "thinking"
-    const d = new Date();
-    console.log(
-      "!=!=!!=!=!!=!=!email liostener funtion wants to fireeee!=!=!!=!=!!=!=!",
-      d.getMinutes(),
-      d.getSeconds(),
-    );
 
     const thinkingResponse = await client.chat.postMessage({
       channel: inputs.channel_id,
@@ -47,7 +41,7 @@ export default SlackFunction(
       console.error("thinking response error", thinkingResponse.error);
     }
 
-    // 2. Send email contents to AI model and generate a response for us
+    // 2. Send msg contents to AI model and generate a response for us
     // Since the event doesn't contain the file itself, must call
     // `conversations.history` to get that info
     const historyResponse = await client.conversations.history({
@@ -93,12 +87,9 @@ export default SlackFunction(
       console.log("update response", updateResponse.error);
     }
 
-    // 4. Create trigger to listen for new messages on the email message thread
+    // 4. Create trigger to listen for new messages on the og message thread
     const authResponse = await client.auth.test();
     const botId = authResponse.user_id;
-
-    // console.log("authresponseObj", JSON.stringify(authResponse)); // there is a bot id issueee ehreeeee!!!!
-    // console.log("boooootttiddddd", botId); // there is a bot id issueee ehreeeee!!!!
 
     const triggerResponse = await client.workflows.triggers.create({
       type: TriggerTypes.Event,
@@ -137,7 +128,7 @@ export default SlackFunction(
     });
 
     if (!triggerResponse.ok) {
-      console.error(triggerResponse.error);
+      console.error("triggerResponse.error", triggerResponse.error);
     }
 
     return {

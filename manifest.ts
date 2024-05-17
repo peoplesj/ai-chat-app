@@ -1,17 +1,16 @@
 import { Manifest } from "deno-slack-sdk/mod.ts";
-import { EmailListenerFunction } from "./functions/email_listener_function.ts";
-import EmailWorkflow from "./workflows/email_workflow.ts";
+import { OriginalMsgListenerFunction } from "./functions/original_msg_listener_function.ts";
+import OriginalMsgWorkflow from "./workflows/original_msg_workflow.ts";
 import ThreadWorkflow from "./workflows/thread_workflow.ts";
 
 export default Manifest({
   name: "ai-chat-app",
-  description:
-    "An app that creates responses to emails automatically within a thread.",
+  description: "A conversational openAI Slack app",
   icon: "assets/robot-emoji.png",
-  workflows: [EmailWorkflow, ThreadWorkflow],
+  workflows: [OriginalMsgWorkflow, ThreadWorkflow],
   outgoingDomains: ["api.openai.com"],
   functions: [
-    EmailListenerFunction,
+    OriginalMsgListenerFunction,
   ],
   datastores: [],
   botScopes: [

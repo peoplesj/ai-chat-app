@@ -1,12 +1,12 @@
 import { Trigger } from "deno-slack-sdk/types.ts";
 import { TriggerEventTypes, TriggerTypes } from "deno-slack-api/mod.ts";
-import EmailWorkflow from "../workflows/email_workflow.ts";
+import OriginalMsgWorkflow from "../workflows/original_msg_workflow.ts";
 
-const emailTrigger: Trigger<typeof EmailWorkflow.definition> = {
+const originalMsgTrigger: Trigger<typeof OriginalMsgWorkflow.definition> = {
   type: TriggerTypes.Event,
   name: "New message trigger",
   description: "A message trigger, responds only to Jeremiah in #ai-chats",
-  workflow: `#/workflows/${EmailWorkflow.definition.callback_id}`,
+  workflow: `#/workflows/${OriginalMsgWorkflow.definition.callback_id}`,
   event: {
     event_type: TriggerEventTypes.MessagePosted,
     channel_ids: ["C0736PKA9JB"], // TODO: Must set this to an internal channel
@@ -37,4 +37,4 @@ const emailTrigger: Trigger<typeof EmailWorkflow.definition> = {
   },
 };
 
-export default emailTrigger;
+export default originalMsgTrigger;

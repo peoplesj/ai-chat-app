@@ -2,7 +2,7 @@ import { DefineFunction, Schema, SlackFunction } from "deno-slack-sdk/mod.ts";
 import OpenAI from "openai/mod.ts";
 import { ChatCompletionMessageParam } from "openai/resources/mod.ts";
 
-export const ListenerDefinition = DefineFunction({
+export const ThreadListenerDefinition = DefineFunction({
   callback_id: "listener_function",
   title: "listener text using AI",
   description:
@@ -28,7 +28,7 @@ export const ListenerDefinition = DefineFunction({
 });
 
 export default SlackFunction(
-  ListenerDefinition,
+  ThreadListenerDefinition,
   async ({ client, inputs, env }) => {
     // 1. Acknowledge user input and response with "thinking" message
     const thinkingResponse = await client.chat.postMessage({
@@ -37,10 +37,9 @@ export default SlackFunction(
       text:
         "Just a moment while I think of a response :hourglass_flowing_sand:",
     });
-    console.log(thinkingResponse);
 
     if (!thinkingResponse.ok) {
-      console.error(thinkingResponse.error);
+      console.error("thinkingResponse.error", thinkingResponse.error);
     }
 
     // 2. Get message contents by pulling in all conversations in the thread
@@ -51,37 +50,32 @@ export default SlackFunction(
     });
 
     if (!conversationResponse.ok) {
-      console.error(conversationResponse.error);
+      console.error("conversationResponse.error", conversationResponse.error);
     }
 
     const openai = new OpenAI({
       apiKey: env.OPENAI_API_KEY,
     });
 
-    //TODO: Fix this content
-    let messages: ChatCompletionMessageParam[] = [
+    const messages: ChatCompletionMessageParam[] = [
       {
         "role": "system",
         "content": `You are a helpful assistant.`,
       },
     ];
 
-    for (let i = 1; i < conversationResponse.messages.length; i++) { // Start at 1, the first message is the file
-      console.log("conversation responses i", conversationResponse.messages[i]);
-      console.log("inputs.bot_id:", inputs.bot_id);
-
-      if (conversationResponse.messages[i].user != inputs.bot_id) {
-        messages.push({
-          "role": "user",
-          "content": `${conversationResponse.messages[i].text}`,
-        });
-      } else {
-        messages.push({
-          "role": "assistant",
-          "content": `${conversationResponse.messages[i].text}`,
-        });
-      }
+    for (let i = 1; i < conversationResponse.messages.length; i++) { // Start at 1, the first message
+      const role = (conversationResponse.messages[i].user != inputs.bot_id)
+        ? "user"
+        : "assistant";
+      messages.push({
+        "role": role,
+        "content": `${conversationResponse.messages[i].text}`,
+      });
     }
+
+    //TODO: Showcase the conversation between assistant and user
+    console.log("completed msgs array", messages);
 
     const chatCompletion = await openai.chat.completions.create({
       messages: messages,
@@ -91,13 +85,6 @@ export default SlackFunction(
     // 3. Update "thinking" message with AI model contents
     const completionContent = chatCompletion.choices[0].message.content;
 
-    const d = new Date();
-    console.log(
-      "!=!=!!=!=!!=!=!thread listenern fucntion // client.chat.update!=!=!!=!=!!=!=!",
-      d.getMinutes(),
-      d.getSeconds(),
-    );
-
     const updateResponse = await client.chat.update({
       channel: inputs.channel_id,
       ts: thinkingResponse.ts,
@@ -106,7 +93,10 @@ export default SlackFunction(
     });
 
     if (!updateResponse.ok) {
-      console.log(updateResponse.error);
+      console.error(
+        "thread listener update response error:",
+        updateResponse.error,
+      );
     }
 
     return {

@@ -1,5 +1,5 @@
 import { DefineWorkflow, Schema } from "deno-slack-sdk/mod.ts";
-import { ListenerDefinition } from "../functions/thread_listener_function.ts";
+import { ThreadListenerDefinition } from "../functions/thread_listener_function.ts";
 
 const ThreadWorkflow = DefineWorkflow({
   callback_id: "thread_workflow",
@@ -22,7 +22,7 @@ const ThreadWorkflow = DefineWorkflow({
   },
 });
 
-ThreadWorkflow.addStep(ListenerDefinition, {
+ThreadWorkflow.addStep(ThreadListenerDefinition, {
   thread_ts: ThreadWorkflow.inputs.thread_ts,
   channel_id: ThreadWorkflow.inputs.channel_id,
   bot_id: ThreadWorkflow.inputs.bot_id,
