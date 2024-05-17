@@ -11,6 +11,7 @@ const emailTrigger: Trigger<typeof EmailWorkflow.definition> = {
     event_type: TriggerEventTypes.MessagePosted,
     channel_ids: ["C0736PKA9JB"], // TODO: Must set this to an internal channel
     filter: {
+      version: 1,
       root: {
         operator: "AND",
         inputs: [{
@@ -24,7 +25,6 @@ const emailTrigger: Trigger<typeof EmailWorkflow.definition> = {
           statement: "{{data.thread_ts}} == null",
         }],
       },
-      version: 1,
     },
   },
   inputs: {

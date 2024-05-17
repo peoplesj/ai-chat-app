@@ -31,12 +31,10 @@ export default SlackFunction(
     //    confirming that the AI model is "thinking"
     const d = new Date();
     console.log(
-      "!!!!!!email liostener funtion wants to fireeee!!!!",
+      "!=!=!!=!=!!=!=!email liostener funtion wants to fireeee!=!=!!=!=!!=!=!",
       d.getMinutes(),
       d.getSeconds(),
     );
-    console.log("inputs.channel_id,:", inputs.channel_id);
-    console.log("inputs.message_ts:", inputs.message_ts);
 
     const thinkingResponse = await client.chat.postMessage({
       channel: inputs.channel_id,
@@ -60,21 +58,21 @@ export default SlackFunction(
     });
 
     if (!historyResponse.ok) {
-      console.error(historyResponse.error);
+      console.error("historyResponse", historyResponse.error);
     }
 
     const latestMessage = historyResponse.messages[0].text;
 
-    // const openai = new OpenAI({
-    //   apiKey: env.OPENAI_API_KEY,
-    // });
+    const openai = new OpenAI({
+      apiKey: env.OPENAI_API_KEY,
+    });
 
     const chatCompletion = await openai.chat.completions.create({
       messages: [
         {
           "role": "system",
           "content":
-            `You are a helpful assistant. Please write a response to the following prompt. no yappin, less than 100 words unless otherwise directed :`,
+            `You are a helpful assistant. Please write a response to the following prompt. no yappin, less than 100 words unless otherwise directed.`,
         },
         { "role": "user", "content": `${latestMessage}` },
       ],
@@ -92,7 +90,7 @@ export default SlackFunction(
     });
 
     if (!updateResponse.ok) {
-      console.log(updateResponse.error);
+      console.log("update response", updateResponse.error);
     }
 
     // 4. Create trigger to listen for new messages on the email message thread
