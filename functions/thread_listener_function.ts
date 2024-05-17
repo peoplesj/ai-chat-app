@@ -31,16 +31,16 @@ export default SlackFunction(
   ListenerDefinition,
   async ({ client, inputs, env }) => {
     // 1. Acknowledge user input and response with "thinking" message
-    const ackResponse = await client.chat.postMessage({
+    const thinkingResponse = await client.chat.postMessage({
       channel: inputs.channel_id,
       thread_ts: inputs.thread_ts,
       text:
         "Just a moment while I think of a response :hourglass_flowing_sand:",
     });
-    console.log(ackResponse);
+    console.log(thinkingResponse);
 
-    if (!ackResponse.ok) {
-      console.error(ackResponse.error);
+    if (!thinkingResponse.ok) {
+      console.error(thinkingResponse.error);
     }
 
     // 2. Get message contents by pulling in all conversations in the thread
@@ -58,6 +58,7 @@ export default SlackFunction(
       apiKey: env.OPENAI_API_KEY,
     });
 
+    //TODO: Fix this content
     let messages: ChatCompletionMessageParam[] = [
       {
         "role": "system",
@@ -66,7 +67,10 @@ export default SlackFunction(
     ];
 
     for (let i = 1; i < conversationResponse.messages.length; i++) { // Start at 1, the first message is the file
-      if (conversationResponse.messages[i] != inputs.bot_id) {
+      console.log("conversation responses i", conversationResponse.messages[i]);
+      console.log("inputs.bot_id:", inputs.bot_id);
+
+      if (conversationResponse.messages[i].user != inputs.bot_id) {
         messages.push({
           "role": "user",
           "content": `${conversationResponse.messages[i].text}`,
@@ -89,7 +93,7 @@ export default SlackFunction(
 
     const updateResponse = await client.chat.update({
       channel: inputs.channel_id,
-      ts: ackResponse.ts,
+      ts: thinkingResponse.ts,
       text: `${completionContent}`,
       mrkdwn: true,
     });

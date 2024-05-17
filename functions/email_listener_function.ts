@@ -29,15 +29,24 @@ export default SlackFunction(
   async ({ client, inputs, env }) => {
     // 1. Send a message in thread to the e-mail message,
     //    confirming that the AI model is "thinking"
-    const ackResponse = await client.chat.postMessage({
+    const d = new Date();
+    console.log(
+      "!!!!!!email liostener funtion wants to fireeee!!!!",
+      d.getMinutes(),
+      d.getSeconds(),
+    );
+    console.log("inputs.channel_id,:", inputs.channel_id);
+    console.log("inputs.message_ts:", inputs.message_ts);
+
+    const thinkingResponse = await client.chat.postMessage({
       channel: inputs.channel_id,
       thread_ts: inputs.message_ts,
       text:
         "Just a moment while I think of a response :hourglass_flowing_sand:",
     });
 
-    if (!ackResponse.ok) {
-      console.error(ackResponse.error);
+    if (!thinkingResponse.ok) {
+      console.error("thinking response error", thinkingResponse.error);
     }
 
     // 2. Send email contents to AI model and generate a response for us
@@ -54,20 +63,20 @@ export default SlackFunction(
       console.error(historyResponse.error);
     }
 
-    const email_text = historyResponse.messages[0].files[0].plain_text;
+    const latestMessage = historyResponse.messages[0].text;
 
-    const openai = new OpenAI({
-      apiKey: env.OPENAI_API_KEY,
-    });
+    // const openai = new OpenAI({
+    //   apiKey: env.OPENAI_API_KEY,
+    // });
 
     const chatCompletion = await openai.chat.completions.create({
       messages: [
         {
           "role": "system",
           "content":
-            `You are a helpful assistant. Please write a response to the following email in 100 words:`,
+            `You are a helpful assistant. Please write a response to the following prompt. no yappin, less than 100 words unless otherwise directed :`,
         },
-        { "role": "user", "content": `${email_text}` },
+        { "role": "user", "content": `${latestMessage}` },
       ],
       model: "gpt-3.5-turbo",
     });
@@ -77,7 +86,7 @@ export default SlackFunction(
     // 3. Update the "thinking" message to the AI model's response
     const updateResponse = await client.chat.update({
       channel: inputs.channel_id,
-      ts: ackResponse.ts,
+      ts: thinkingResponse.ts,
       text: `${completionContent}`,
       mrkdwn: true,
     });
@@ -87,48 +96,51 @@ export default SlackFunction(
     }
 
     // 4. Create trigger to listen for new messages on the email message thread
-    const authResponse = await client.auth.test();
-    const botId = authResponse.user_id;
+    // const authResponse = await client.auth.test();
+    // const botId = authResponse.user_id;
 
-    const triggerResponse = await client.workflows.triggers.create({
-      type: TriggerTypes.Event,
-      name: `Thread Listener response for ts: ${inputs.message_ts}`,
-      description: "Listens on the thread for the message in the name",
-      workflow: `#/workflows/${ThreadWorkflow.definition.callback_id}`,
-      event: {
-        event_type: TriggerEventTypes.MessagePosted,
-        channel_ids: [`${inputs.channel_id}`],
-        filter: {
-          version: 1,
-          root: {
-            operator: "AND",
-            inputs: [{
-              statement: `{{data.thread_ts}} == ${inputs.message_ts}`,
-            }, {
-              operator: "NOT",
-              inputs: [{
-                statement: `{{data.user_id}} == ${botId}`,
-              }],
-            }],
-          },
-        },
-      },
-      inputs: {
-        thread_ts: {
-          value: inputs.message_ts,
-        },
-        channel_id: {
-          value: "{{data.channel_id}}",
-        },
-        bot_id: {
-          value: botId,
-        },
-      },
-    });
+    // console.log("authresponseObj", JSON.stringify(authResponse)); // there is a bot id issueee ehreeeee!!!!
+    // console.log("boooootttiddddd", botId); // there is a bot id issueee ehreeeee!!!!
 
-    if (!triggerResponse.ok) {
-      console.error(triggerResponse.error);
-    }
+    // const triggerResponse = await client.workflows.triggers.create({
+    //   type: TriggerTypes.Event,
+    //   name: `Thread Listener response for ts: ${inputs.message_ts}`,
+    //   description: "Listens on the thread for the message in the name",
+    //   workflow: `#/workflows/${ThreadWorkflow.definition.callback_id}`,
+    //   event: {
+    //     event_type: TriggerEventTypes.MessagePosted,
+    //     channel_ids: [`${inputs.channel_id}`],
+    //     filter: {
+    //       version: 1,
+    //       root: {
+    //         operator: "AND",
+    //         inputs: [{
+    //           statement: `{{data.thread_ts}} == ${inputs.message_ts}`,
+    //         }, {
+    //           operator: "NOT",
+    //           inputs: [{
+    //             statement: `{{data.user_id}} == ${botId}`,
+    //           }],
+    //         }],
+    //       },
+    //     },
+    //   },
+    //   inputs: {
+    //     thread_ts: {
+    //       value: inputs.message_ts,
+    //     },
+    //     channel_id: {
+    //       value: "{{data.channel_id}}",
+    //     },
+    //     bot_id: {
+    //       value: botId,
+    //     },
+    //   },
+    // });
+
+    // if (!triggerResponse.ok) {
+    //   console.error(triggerResponse.error);
+    // }
 
     return {
       outputs: {},

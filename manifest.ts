@@ -8,7 +8,7 @@ export default Manifest({
   description:
     "An app that creates responses to emails automatically within a thread.",
   icon: "assets/robot-emoji.png",
-  workflows: [EmailWorkflow, ThreadWorkflow],
+  workflows: [EmailWorkflow],
   outgoingDomains: ["api.openai.com"],
   functions: [
     EmailListenerFunction,

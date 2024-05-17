@@ -4,18 +4,27 @@ import EmailWorkflow from "../workflows/email_workflow.ts";
 
 const emailTrigger: Trigger<typeof EmailWorkflow.definition> = {
   type: TriggerTypes.Event,
-  name: "Email message trigger",
-  description:
-    "A email trigger, responds only to emails being sent via a channel email",
+  name: "New message trigger",
+  description: "A message trigger, responds only to Jeremiah in #ai-chats",
   workflow: `#/workflows/${EmailWorkflow.definition.callback_id}`,
   event: {
     event_type: TriggerEventTypes.MessagePosted,
     channel_ids: ["C0736PKA9JB"], // TODO: Must set this to an internal channel
     filter: {
-      version: 1,
       root: {
-        statement: "{{data.user_id}} == USLACKBOT", // Messages that come in via a channel e-mail have this as their user
+        operator: "AND",
+        inputs: [{
+          operator: "NOT",
+          inputs: [{
+            // Filter out posts by apps
+            statement: "{{data.user_id}} == null",
+          }],
+        }, {
+          // Filter out thread replies
+          statement: "{{data.thread_ts}} == null",
+        }],
       },
+      version: 1,
     },
   },
   inputs: {
